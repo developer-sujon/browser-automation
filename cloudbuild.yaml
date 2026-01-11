@@ -36,7 +36,7 @@ steps:
       - --concurrency
       - "1"
       - --max-instances
-      - "1000"
+      - "10"
       - --timeout
       - "3600"
 
