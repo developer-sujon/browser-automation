@@ -1,69 +1,113 @@
-# Mass Form Submitter with Cloudflare Workers
+# EazySlot Automation
 
-A high-performance, scalable form submission system built on Cloudflare Workers, Durable Objects, and Puppeteer.
+This project is a Cloud Run-ready automation service built with **Hono**, **Playwright**, and **Bun**.
 
 ## Features
 
--   **Massive Concurrency:** Supports submitting 1000+ forms simultaneously.
--   **Isolation:** Strict 1-to-1 mapping (1 Form = 1 Worker = 1 Browser) for maximum security and reliability.
--   **Browser Providers:**
-    -   **Cloudflare Browser Rendering:** Fast, integrated, cost-effective for small batches.
-    -   **Bright Data / Browserless:** Unlimited concurrency with IP rotation for massive scale.
--   **Resilience:** Advanced retry logic, rate limit handling (429), and automatic backoff.
--   **Dashboard:** Built-in UI to track job status, worker IDs, and success/failure rates.
+- **Browser Automation**: Uses Playwright to fill and submit forms.
+- **Cloud Run Optimized**: Runs in a containerized environment with proper flag handling (`--no-sandbox`).
+- **Batch Processing**: Can process multiple jobs concurrently via `/api/batch-run`.
+- **Database Integration**: Tracks job status (created, processing, success, failed) in PostgreSQL.
+- **Webhook/API**: REST API to trigger jobs.
+
+## Prerequisites
+
+- [Bun](https://bun.sh)
+- PostgreSQL Database
+- Google Cloud Platform Account (for deployment)
 
 ## Setup
 
-1.  **Install Dependencies:**
-    ```bash
-    npm install
-    ```
+1. **Clone the repository:**
 
-2.  **Configure Deployment:**
-    Edit `src/deployment-config.ts` to set your preferences:
-    
-    -   **TIER:** `PAID` (Required for high concurrency)
-    -   **BROWSER_PROVIDER:** `BRIGHT_DATA` (Recommended for 1k+ burst) or `CLOUDFLARE` (For <50 concurrent)
-    
-    **Bright Data Setup:**
-    If using Bright Data, update the credentials in `src/deployment-config.ts`:
-    ```typescript
-    BRIGHT_DATA: {
-      USER: "YOUR_ZONE_USERNAME",
-      PASS: "YOUR_ZONE_PASSWORD",
-      HOST: "brd.superproxy.io:9222",
-    }
-    ```
+   ```bash
+   git clone <repository-url>
+   cd eazyslot
+   ```
 
-3.  **Local Development:**
-    ```bash
-    npx wrangler dev
-    ```
+2. **Install dependencies:**
 
-4.  **Deploy:**
-    ```bash
-    npx wrangler deploy
-    ```
+   ```bash
+   bun install
+   ```
 
-## Cost Management
+3. **Environment Variables:**
+   Copy `.env.example` to `.env` (create if not exists) and set:
+   ```env
+   DATABASE_URL=postgres://user:pass@host:5432/db
+   API_KEY=your_secret_key
+   TARGET_URL=https://target-site.com/contact
+   APP_URL=https://your-cloud-run-url.a.run.app (Optional, for loopback)
+   ```
 
-### Burst Mode (Unlimited Concurrency)
--   **Config:** `CONCURRENCY_LIMIT: 9999`
--   **Speed:** Instant execution of all forms.
--   **Cost Warning:** Can be expensive if using Cloudflare Browsers ($2000+/mo for 1k daily). Use **Bright Data** for cost efficiency (~$150/mo).
+## Local Development
 
-### Smart Queue (Cost Saver)
--   **Config:** `CONCURRENCY_LIMIT: 50`
--   **Speed:** Processes in batches (e.g., 50 at a time).
--   **Cost:** Very low (~$80/mo on Cloudflare).
--   **Trade-off:** Takes slightly longer (e.g., 40 mins for 1k forms).
+1. **Run the server:**
 
-## Architecture
+   ```bash
+   bun dev
+   ```
 
--   **JobManager (Durable Object):** Orchestrates the jobs, manages state, and handles retries.
--   **BrowserHandler:** Abstracted layer to switch between Cloudflare Puppeteer and Bright Data/Browserless.
--   **Recursive Sharding:** Automatically splits large jobs into smaller shards to avoid memory limits.
+2. **Trigger a Job:**
 
-## Disclaimer
+   ```bash
+   curl -X POST http://localhost:4000/api/run \
+     -H "Authorization: Bearer YOUR_API_KEY" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "first_name": "John",
+       "last_name": "Doe",
+       "email": "john@example.com",
+       "phone": "1234567890",
+       "message": "Hello World"
+     }'
+   ```
 
-This tool is intended for legitimate testing and automation purposes. Please respect the target website's Terms of Service and Rate Limits.
+3. **Batch Run (Process Pending Jobs):**
+   ```bash
+   curl -X POST http://localhost:4000/api/batch-run \
+     -H "Authorization: Bearer YOUR_API_KEY"
+   ```
+
+## Deployment (Google Cloud Run)
+
+This project is configured for **Google Cloud Build** and **Cloud Run**.
+
+### Option 1: Continuous Deployment via GitHub
+
+1. Connect your repository to **Google Cloud Build**.
+2. Create a Trigger for `push` to `main` branch.
+3. Use `cloudbuild.yaml` as the build configuration.
+4. Set the following Substitution variables in Cloud Build Trigger:
+   - `_REGION`: `asia-south1` (or your preferred region)
+
+### Option 2: Manual Deployment
+
+```bash
+gcloud run deploy eazyslot \
+  --source . \
+  --platform managed \
+  --region asia-south1 \
+  --allow-unauthenticated \
+  --set-env-vars NODE_ENV=production
+```
+
+## Database Schema
+
+The system expects a `files` table:
+
+```sql
+CREATE TABLE files (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  first_name TEXT,
+  last_name TEXT,
+  email TEXT,
+  phone TEXT,
+  message TEXT,
+  status TEXT DEFAULT 'created', -- created, processing, success, failed
+  attempts INT DEFAULT 0,
+  reason TEXT,
+  metadata JSONB,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+```

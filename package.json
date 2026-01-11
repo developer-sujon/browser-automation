@@ -1,25 +1,26 @@
 {
-  "name": "testeasy",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "dev:hono": "wrangler dev",
-    "dev:remote": "wrangler dev --remote",
-    "hono:deploy": "wrangler deploy --minify",
-    "generate:types": "wrangler types --env-interface CloudflareBindings"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "name": "eazyslot",
+  "module": "index.ts",
   "type": "module",
+  "scripts": {
+    "build": "echo \"skip build\"",
+    "start": "bun src/index.ts",
+    "dev": "bun --watch src/index.ts",
+    "test": "bun test"
+  },
+  "private": true,
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20260109.0",
-    "hono": "^4.11.3",
-    "typescript": "^5.9.3",
-    "wrangler": "^4.58.0"
+    "@types/bun": "latest",
+    "@types/node": "^25.0.6"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
   },
   "dependencies": {
-    "@cloudflare/puppeteer": "^1.0.4"
+    "hono": "^4.11.3",
+    "playwright": "^1.57.0",
+    "postgres": "^3.4.8",
+    "puppeteer-core": "^24.34.0",
+    "zod": "^4.3.5"
   }
 }
