@@ -50,7 +50,7 @@ export class JobManager extends DurableObject implements IJobManager {
     const data = body.data || [];
 
     // Recursive Sharding Logic (1 DO per 1 Form)
-    const RECURSIVE_THRESHOLD = 1;
+    const { RECURSIVE_THRESHOLD } = GET_CONFIG();
     if (data.length > RECURSIVE_THRESHOLD) {
       return this.delegateShards(data, body);
     }
