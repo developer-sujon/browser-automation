@@ -34,9 +34,9 @@ steps:
       - --cpu
       - "1"
       - --concurrency
-      - "1"
+      - "80"
       - --max-instances
-      - "10"
+      - "4"
       - --timeout
       - "3600"
 
