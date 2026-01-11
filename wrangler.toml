@@ -1,0 +1,23 @@
+name = "testeasy"
+main = "src/index.ts"
+compatibility_date = "2024-04-05"
+compatibility_flags = ["nodejs_compat"]
+account_id = "7d798ee64854d9fc0b3f98a5aa7f61f3"
+
+# Enable Browser Rendering
+browser = { binding = "MYBROWSER" }
+[[durable_objects.bindings]]
+name = "JOB_MANAGER"
+class_name = "JobManager"
+
+# Durable Object migrations are required to create the storage
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["JobManager"]
+
+[observability]
+enabled = true
+head_sampling_rate = 1
+
+
+

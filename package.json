@@ -1,0 +1,25 @@
+{
+  "name": "testeasy",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev:hono": "wrangler dev",
+    "dev:remote": "wrangler dev --remote",
+    "hono:deploy": "wrangler deploy --minify",
+    "generate:types": "wrangler types --env-interface CloudflareBindings"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260109.0",
+    "hono": "^4.11.3",
+    "typescript": "^5.9.3",
+    "wrangler": "^4.58.0"
+  },
+  "dependencies": {
+    "@cloudflare/puppeteer": "^1.0.4"
+  }
+}
