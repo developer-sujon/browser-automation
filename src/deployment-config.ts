@@ -14,8 +14,8 @@ export const CONFIG = {
     },
     PAID: {
       RECURSIVE_THRESHOLD: 1, // STRICT 1-to-1: 1 Form = 1 Worker
-      CONCURRENCY_LIMIT: 9999, // UNLIMITED: User requested strict simultaneous execution (High Cost accepted)
-      BATCH_SIZE: 9999, // Load all items in one batch
+      CONCURRENCY_LIMIT: 50, // OPTIMIZED: Max 50 browsers at once (Cost ~$80/mo vs $2000)
+      BATCH_SIZE: 9999, // Load all items, queue them up
     },
   },
 };
