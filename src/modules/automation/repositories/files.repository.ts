@@ -3,6 +3,7 @@ import type { FileItem } from "../types";
 
 export interface IFilesRepository {
   findPending(limit: number): Promise<FileItem[]>;
+  countPending(): Promise<number>;
   updateStatus(
     id: string,
     status: string,
@@ -24,7 +25,7 @@ export class FilesRepository implements IFilesRepository {
         SELECT id FROM files 
         WHERE 
           status != 'success'
-          AND created_at::date = CURRENT_DATE
+          -- AND created_at::date = CURRENT_DATE
         LIMIT ${limit}
         FOR UPDATE SKIP LOCKED
       )
@@ -32,6 +33,17 @@ export class FilesRepository implements IFilesRepository {
     `;
 
     return rows;
+  }
+
+  async countPending(): Promise<number> {
+    const result = await sql`
+      SELECT count(*)::int as count 
+      FROM files 
+      WHERE 
+        status != 'success'
+        -- AND created_at::date = CURRENT_DATE
+    `;
+    return result[0]?.count || 0;
   }
 
   async updateStatus(

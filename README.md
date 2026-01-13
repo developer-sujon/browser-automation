@@ -35,7 +35,6 @@ This project is a Cloud Run-ready automation service built with **Hono**, **Play
    Copy `.env.example` to `.env` (create if not exists) and set:
    ```env
    DATABASE_URL=postgres://user:pass@host:5432/db
-   API_KEY=your_secret_key
    TARGET_URL=https://target-site.com/contact
    APP_URL=https://your-cloud-run-url.a.run.app (Optional, for loopback)
    ```
@@ -52,7 +51,6 @@ This project is a Cloud Run-ready automation service built with **Hono**, **Play
 
    ```bash
    curl -X POST http://localhost:4000/api/run \
-     -H "Authorization: Bearer YOUR_API_KEY" \
      -H "Content-Type: application/json" \
      -d '{
        "first_name": "John",
@@ -66,7 +64,6 @@ This project is a Cloud Run-ready automation service built with **Hono**, **Play
 3. **Batch Run (Process Pending Jobs):**
    ```bash
    curl -X POST http://localhost:4000/api/batch-run \
-     -H "Authorization: Bearer YOUR_API_KEY"
    ```
 
 ## Deployment (Google Cloud Run)

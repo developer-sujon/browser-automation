@@ -20,7 +20,9 @@ export class BrowserService {
   private logger: Logger;
 
   constructor(private filesRepo: FilesRepository) {
-    this.logger = new Logger("BrowserService");
+    const taskIndex =
+      process.env.JOB_COMPLETION_INDEX || process.env.TASK_INDEX || "NA";
+    this.logger = new Logger(`BrowserService[${taskIndex}]`);
   }
 
   /**
@@ -100,10 +102,13 @@ export class BrowserService {
     this.logger.info("Launching browser...");
     return await chromium.launch({
       headless: true,
+      executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH,
       args: [
         "--ignore-certificate-errors",
         "--no-sandbox",
         "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage", // Recommended for Docker/K8s
+        "--disable-gpu",
       ],
     });
   }
@@ -112,7 +117,21 @@ export class BrowserService {
    * Setup browser context with viewport, headers, anti-detection
    */
   private async setupContext(browser: Browser): Promise<BrowserContext> {
+    const proxyConfig =
+      env.PROXY_SERVER && env.PROXY_USERNAME && env.PROXY_PASSWORD
+        ? {
+            server: env.PROXY_SERVER,
+            username: env.PROXY_USERNAME,
+            password: env.PROXY_PASSWORD,
+          }
+        : undefined;
+
+    if (proxyConfig) {
+      this.logger.info("Using proxy configuration");
+    }
+
     const context = await browser.newContext({
+      // proxy: proxyConfig,
       viewport: { width: 1920, height: 1080 },
       userAgent:
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",

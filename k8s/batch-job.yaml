@@ -1,0 +1,78 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: eazyslot-batch
+  labels:
+    app: eazyslot
+spec:
+  parallelism: 1000
+  completions: 1000
+  completionMode: Indexed
+  backoffLimit: 3
+  ttlSecondsAfterFinished: 7200
+
+  template:
+    metadata:
+      labels:
+        app: eazyslot
+    spec:
+      restartPolicy: Never
+
+      # Registry access
+      imagePullSecrets:
+        - name: registry-eazyslot-registry
+
+      containers:
+        - name: eazyslot
+          image: registry.digitalocean.com/eazyslot-registry/eazyslot:latest
+          command: ["bun", "src/worker.ts"]
+
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: DB_MAX_CONNECTIONS
+              value: "1"
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: eazyslot-secrets
+                  key: database-url
+                  optional: true
+            - name: TARGET_URL
+              valueFrom:
+                secretKeyRef:
+                  name: eazyslot-secrets
+                  key: target-url
+                  optional: true
+            - name: PROXY_SERVER
+              valueFrom:
+                secretKeyRef:
+                  name: eazyslot-secrets
+                  key: proxy-server
+                  optional: true
+            - name: PROXY_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: eazyslot-secrets
+                  key: proxy-username
+                  optional: true
+            - name: PROXY_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: eazyslot-secrets
+                  key: proxy-password
+                  optional: true
+
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "2000m"
+              memory: "4Gi"
+
+          securityContext:
+            runAsNonRoot: false
+            capabilities:
+              add:
+                - SYS_ADMIN

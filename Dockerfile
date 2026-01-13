@@ -1,34 +1,35 @@
-# Use official Playwright image to ensure all browser dependencies are present
-# We pin the version to match package.json to avoid re-downloading browsers
-FROM mcr.microsoft.com/playwright:v1.57.0-jammy
+FROM oven/bun:1.1
 
-# Install Bun
-ENV BUN_INSTALL="/root/.bun"
-ENV PATH="$BUN_INSTALL/bin:$PATH"
+# Install Chromium and dependencies
+RUN apt-get update && apt-get install -y \
+    chromium \
+    libnss3 \
+    libfreetype6 \
+    libharfbuzz0b \
+    ca-certificates \
+    fonts-freefont-ttf \
+    nodejs \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install unzip which is required for Bun
-RUN apt-get update && apt-get install -y unzip && rm -rf /var/lib/apt/lists/*
-
-RUN curl -fsSL https://bun.sh/install | bash
+# Set Puppeteer/Playwright to use installed Chromium
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium \
+    PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 \
+    PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium
 
 WORKDIR /app
 
-# Copy dependency files
-COPY package.json bun.lock ./
+# Copy package files
+COPY package.json bun.lockb* ./
 
 # Install dependencies
-# We skip browser download because they are already in the base image
-ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
-RUN bun install --frozen-lockfile
+RUN bun install --production
 
 # Copy source code
 COPY . .
 
-# Set default port for Cloud Run
-ENV PORT=8080
+# Expose port
+EXPOSE 4000
 
-# Expose the port
-EXPOSE 8080
-
-# Start the application
-CMD ["bun", "start"]
+# Default command (can be overridden in Kubernetes)
+CMD ["bun", "src/worker.ts"]
